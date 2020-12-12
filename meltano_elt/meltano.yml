@@ -1,0 +1,66 @@
+version: 1
+send_anonymous_usage_stats: true
+project_id: 842c95f0-5b9a-4d62-bf3f-a2ceab15cc7c
+plugins:
+  extractors:
+  - name: tap-mongodb
+    variant: singer-io
+    pip_url: tap-mongodb
+    config:
+      host: localhost
+      port: 27017
+      user: aminuolawale1
+      database: admin
+      replica_set: rs0
+    metadata:
+      sendbox_discovery-order:
+        replication-method: LOG_BASED
+      sendbox_discovery-category:
+        replication-method: LOG_BASED
+    select:
+    - sendbox_discovery-order._id
+    - sendbox_discovery-order.name
+    - sendbox_discovery-category.*
+  - name: tap-csv
+    variant: meltano
+    pip_url: git+https://gitlab.com/meltano/tap-csv.git
+    config:
+      files:
+      - entity: post
+        file: output/post-20201209T235933.csv
+        keys:
+        - _id
+    select:
+    - sendbox_discovery-post.name
+    metadata:
+      sendbox_discovery-post:
+        replication-method: FULL_TABLE
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
+  - name: target-postgres
+    variant: datamill-co
+    pip_url: singer-target-postgres
+    config:
+      postgres_username: postgres
+      postgres_database: meltano_warehouse1
+      postgres_schema: public
+  - name: target-bigquery
+    variant: adswerve
+    pip_url: git+https://github.com/adswerve/target-bigquery.git@v0.10.2
+    config:
+      project_id: green-buttress-289410
+      dataset_id: diamantinodiamantino
+      location: EU
+      credentials_path: /home/aminuolawale/Downloads/green-buttress-289410-6db7a67665df.json
+  - name: target-csv
+    variant: singer-io
+    pip_url: target-csv
+schedules:
+- name: mongodb-to-jsonl
+  extractor: tap-mongodb
+  loader: target-jsonl
+  transform: skip
+  interval: '@hourly'
+  start_date: 2020-12-09 23:29:05.749764
