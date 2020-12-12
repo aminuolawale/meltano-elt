@@ -1,0 +1,31 @@
+version: 1
+send_anonymous_usage_stats: true
+project_id: e2d60d94-6ece-4456-b41b-e0f1a55a8e9e
+plugins:
+  extractors:
+  - name: tap-mongodb
+    variant: singer-io
+    pip_url: tap-mongodb
+    config:
+      host: localhost
+      port: 27017
+      user: aminuolawale1
+      password: Comaberenices8#
+      database: admin
+    select:
+    - post.name
+    - post.code
+    metadata:
+      '*':
+        replication-method: FULL_TABLE
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
+schedules:
+- name: mongodb-to-jsonl
+  extractor: tap-mongodb
+  loader: target-jsonl
+  transform: skip
+  interval: '@once'
+  start_date: 2020-12-08 23:41:39.627177
